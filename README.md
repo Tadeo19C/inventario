@@ -15,3 +15,6 @@ npm run start
 ```bash
 npm run build
 ```
+
+## Despliegue
+Este proyecto se despliega en Vercel.
