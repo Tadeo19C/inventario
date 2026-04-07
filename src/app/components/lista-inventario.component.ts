@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InventoryService } from '../services/inventory.service';
 import { Producto } from '../models/producto';
@@ -98,6 +99,7 @@ import { Producto } from '../models/producto';
 export class ListaInventarioComponent implements OnInit {
   private readonly inventoryService = inject(InventoryService);
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   productos = signal<Producto[]>([]);
   edicionCodigo = signal<string | null>(null);
@@ -111,6 +113,13 @@ export class ListaInventarioComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarProductos();
+
+    this.inventoryService
+      .onRefresh()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        void this.cargarProductos();
+      });
   }
 
   async cargarProductos(): Promise<void> {

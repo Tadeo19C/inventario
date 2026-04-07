@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Observable, Subject } from 'rxjs';
 import { Producto } from '../models/producto';
 
 @Injectable({
@@ -7,6 +8,7 @@ import { Producto } from '../models/producto';
 })
 export class InventoryService {
   private readonly supabase: SupabaseClient;
+  private readonly refreshSubject = new Subject<void>();
 
   constructor() {
     const supabaseUrl = (window as any).__env?.SUPABASE_URL ?? 'https://fzydyqxyesendlshqfzx.supabase.co';
@@ -14,6 +16,10 @@ export class InventoryService {
       (window as any).__env?.SUPABASE_ANON_KEY ??
       'sb_publishable_pmqFIpYKLepBy6MbuS1PtA_fSJDFXC1';
     this.supabase = createClient(supabaseUrl, supabaseKey);
+  }
+
+  onRefresh(): Observable<void> {
+    return this.refreshSubject.asObservable();
   }
 
   async obtenerProductos(): Promise<Producto[]> {
@@ -37,6 +43,8 @@ export class InventoryService {
     if (error) {
       throw error;
     }
+
+    this.refreshSubject.next();
   }
 
   async actualizarProducto(codigo: string, descripcion: string): Promise<void> {
